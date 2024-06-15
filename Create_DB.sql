@@ -1,6 +1,4 @@
 DROP TABLE IF EXISTS Klienci, Rodzaj_Pomaranczy, Magazyn, Pracownicy, Zamowienia, Transport, Znizki, Plantacja CASCADE;
--- DODAĆ jakie są najważniejsze encje i ich atrybuty, jaki charakter mają związki je łączące, jakie pytania mamy zamiar zadawać, ew. jakie przewidujemy wyzwalacze,
--- WYZWALACZE I TUTAJ KONIEC
 CREATE TABLE Klienci (
     id_klienta INT PRIMARY KEY NOT NULL,
     imie VARCHAR(50) NOT NULL,

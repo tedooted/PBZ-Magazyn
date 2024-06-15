@@ -1,61 +1,62 @@
--- DODAC Wyświetlanie wyniku operacji np. operacji arytmetycznych na liczbach czy na datach.
---Warunki odwołujące się do wzorców napisów (np. opisy wszystkich układanek, LIKE 'układanka%').
----Użycie zagnieżdżenia w obu odmianach, nieskorelowane i skorelowane.
---Sprawdzanie warunku NULL.
---Zapytania negatywne, np. klienci bez złożonych zamówień. Co najmniej w dwu wersjach.
---Wersje zapytań negatywnych:
---Użycie widoku (perspektywy, VIEW).
-
-SELECT * FROM Klienci WHERE miasto = 'Warszawa';
-
-SELECT * FROM Zamowienia WHERE numer_klienta = 1;
-
-SELECT * FROM Magazyn m
-JOIN Rodzaj_Pomaranczy rp ON m.id_pomaranczy = rp.id_pomaranczy
-WHERE rp.data_zbioru > '2024-05-20';
-
-SELECT z.nr_zamowienia, z.data_wysylki, k.imie, k.nazwisko, k.miasto, k.ulica
-FROM Zamowienia z
-JOIN Klienci k ON z.numer_klienta = k.numer_klienta;
-
-SELECT p.imie, p.nazwisko, COUNT(z.nr_zamowienia) AS liczba_zamowien
-FROM Pracownicy p
-INNER JOIN Zamowienia z ON p.id_pracownika = z.id_pracownika
-GROUP BY p.imie, p.nazwisko;
-
-SELECT nr_zamowienia, imie, nazwisko, nazwa AS rodzaj_pomaranczy, data_zbioru, data_wysylki, (data_wysylki - data_zbioru)
-FROM Zamowienia
-JOIN Klienci ON Zamowienia.id_klienta = Klienci.id_klienta
-JOIN Rodzaj_Pomaranczy R ON Z.id_pomaranczy = R.id_pomaranczy;
-
-SELECT *
+--1.
+SELECT Klienci.imie, Klienci.nazwisko, Zamowienia.data_wysylki
 FROM Klienci
-WHERE nazwisko LIKE 'Ko%';
+INNER JOIN Zamowienia ON Klienci.id_klienta = Zamowienia.id_klienta;
 
-SELECT *
-FROM Rodzaj_Pomaranczy
-WHERE nazwa LIKE '%Val%';
+SELECT Klienci.imie, Klienci.nazwisko, Zamowienia.data_wysylki
+FROM Klienci, Zamowienia
+WHERE Klienci.id_klienta = Zamowienia.id_klienta;
+--2
+SELECT Rodzaj_Pomaranczy.nazwa, SUM(Magazyn.ilosc) AS calkowita_ilosc
+FROM Magazyn
+INNER JOIN Rodzaj_Pomaranczy ON Magazyn.id_pomaranczy = Rodzaj_Pomaranczy.id_pomaranczy
+GROUP BY Rodzaj_Pomaranczy.nazwa;
+--3
+SELECT Klienci.imie, Klienci.nazwisko, Zamowienia.data_wysylki, Zamowienia.data_wysylki - INTERVAL '2 days' AS data_przygotowania
+FROM Klienci
+INNER JOIN Zamowienia ON Klienci.id_klienta = Zamowienia.id_klienta;
+--4
+SELECT * 
+FROM Klienci
+WHERE nazwisko LIKE 'Kow%';
+--5
+SELECT imie, nazwisko
+FROM Klienci
+WHERE id_klienta IN (SELECT id_klienta FROM Zamowienia WHERE data_wysylki > '2024-06-01');
 
-SELECT *
-FROM Rodzaj_Pomaranczy
-WHERE data_zbioru IS NOT NULL;
-
-SELECT
-    K.id_klienta,
-    K.imie,
-    K.nazwisko,
-    COUNT(Z.nr_zamowienia) AS liczba_zamowien
-FROM
-    Klienci K
-LEFT JOIN
-    Zamowienia Z ON K.id_klienta = Z.id_klienta
-GROUP BY
-    K.id_klienta,
-    K.imie,
-    K.nazwisko;
+SELECT imie, nazwisko
+FROM Klienci k
+WHERE EXISTS (SELECT 1 FROM Zamowienia z WHERE z.id_klienta = k.id_klienta AND z.data_wysylki > '2024-06-01');
+--6
+SELECT * 
+FROM Znizki 
+WHERE klient IS NULL;
+--7
+SELECT * 
+FROM Klienci
+WHERE id_klienta NOT IN (SELECT id_klienta FROM Zamowienia);
 
 
-SELECT *
-FROM Rodzaj_Pomaranczy R
-LEFT JOIN Zamowienia Z ON R.id_pomaranczy = Z.id_pomaranczy
-WHERE Z.id_pomaranczy IS NULL;
+SELECT Klienci.*
+FROM Klienci
+LEFT JOIN Zamowienia ON Klienci.id_klienta = Zamowienia.id_klienta
+WHERE Zamowienia.id_klienta IS NULL;
+
+--8
+CREATE VIEW Klienci_Z_Zamowieniami AS
+SELECT Klienci.imie, Klienci.nazwisko, Zamowienia.nr_zamowienia, Zamowienia.data_wysylki
+FROM Klienci
+INNER JOIN Zamowienia ON Klienci.id_klienta = Zamowienia.id_klienta;
+
+SELECT * FROM Klienci_Z_Zamowieniami;
+
+--9
+DELETE FROM Klienci
+WHERE id_klienta = 3;
+
+--10
+UPDATE Magazyn
+SET ilosc = ilosc + 100
+WHERE id_magazynu = 1;
+
+
